@@ -1,6 +1,5 @@
 import React, { Fragment } from 'react'
-import '../../App.css'
-const Header = () => {
+const Footer = () => {
     return (
         <Fragment>
 
@@ -8,4 +7,4 @@ const Header = () => {
     )
 }
 
-export default Header
+export default Footer

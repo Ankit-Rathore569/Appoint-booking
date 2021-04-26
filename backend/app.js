@@ -10,7 +10,10 @@ app.use(express.json());
 
 // Imports all router
 const UserRouter = require("./routes/userRoutes")
+app.get('/', function (req, res) {
+    res.send('Hello World!')
+})
 
-app.use("/api/v1", UserRouter)
+app.use("/api", UserRouter)
 
 module.exports = app
