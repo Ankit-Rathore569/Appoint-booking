@@ -1,11 +1,13 @@
 const { response } = require('express')
 const express = require('express')
 const bodyParser = require('body-parser')
+const cookieParser = require('cookie-parser')
 const app = express()
 
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(bodyParser.json()) // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(cookieParser())
 app.use(express.json());
 
 // Imports all router

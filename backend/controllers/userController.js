@@ -1,39 +1,19 @@
 const userModel = require('../models/userModel')
-const catchAsyncErrors = require('../middleware/catchAsyncErrors')
-const ErrorHandler = require('../utils/errorHandler')
+const ErrorHandler = require('../utils/errorHandler');
+const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
+const sendToken = require('../utils/jwtToken');;
 
-// Register a user   => /api/v1/register
+// Register a user   => /api/register
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     const { name, email, mobile, password } = req.body
-    userModel.findOne({ email: email }).then(user => {
-        if (user) {
-            return res.status(422).json({
-                errors: [{ user: "Email already exists" }]
-            })
-        } else {
-
-            const userDeatails = new userModel({
-                name, email, password, mobile
-            })
-
-            userDeatails.save().then(response => {
-                res.status(200).json({
-                    success: true,
-                    result: response
-                })
-
-            }).catch(err => {
-                res.status(500).json({
-                    errors: [{ error: err }]
-                })
-            })
-
-        }
-    }).catch(err => {
-        res.status(500).json({
-            errors: [{ error: 'Something went wrong' }]
-        });
+    const user = await userModel.create({
+        name,
+        email,
+        mobile,
+        password,
     })
+
+    sendToken(user, 200, res)
 })
 
 // Login User   => /api/login
@@ -42,19 +22,55 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 
     // Checks if email and password is entered by user
     if (!email || !password) {
-        return next(new ErrorHandler("Please enter email & password", 400));
+        return next(new ErrorHandler('Please enter email & password', 400))
     }
 
-    // Finding email in database
-    const user = await userModel.findOne({ email: email, password: password }).select('+password')
+    // Finding user in database
+    const user = await userModel.findOne({ email }).select('+password')
 
-    // If User not found in database
     if (!user) {
-        return next(new ErrorHandler("Invalid username or password", 401));
+        return next(new ErrorHandler('Invalid Email or Password', 401));
     }
+
+    // Checks if password is correct or not
+    const isPasswordMatched = await user.comparePassword(password);
+
+    if (!isPasswordMatched) {
+        return next(new ErrorHandler('Invalid Email or Password', 401));
+    }
+
+    sendToken(user, 200, res)
+})
+
+// Get currently logged in user details   =>   /api/me
+exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
+    const user = await userModel.findById(req.user.id);
 
     res.status(200).json({
         success: true,
         user
+    })
+})
+
+// Get all users   =>   /api/admin/users
+exports.allUsers = catchAsyncErrors(async (req, res, next) => {
+    const users = await userModel.find();
+
+    res.status(200).json({
+        success: true,
+        users
+    })
+})
+
+// Logout user   =>   /api/logout
+exports.logout = catchAsyncErrors(async (req, res, next) => {
+    res.cookie('token', null, {
+        expires: new Date(Date.now()),
+        httpOnly: true
+    })
+
+    res.status(200).json({
+        success: true,
+        message: 'Logged out'
     })
 })

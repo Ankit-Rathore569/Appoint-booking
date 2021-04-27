@@ -5,26 +5,29 @@ import { Link } from 'react-router-dom'
 import Loader from "../layout/Loader/Loader";
 import { login, clearErrors } from "../../redux/Actions/userAction";
 
-const Login = ({ history }) => {
+const Login = ({ history, location }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const dispatch = useDispatch();
     const alert = useAlert();
 
-    const { isAuthenticated, loading, error } = useSelector(
+    const { isAuthenticated, loading, error, user } = useSelector(
         (state) => state.users
     );
 
     useEffect(() => {
         if (isAuthenticated) {
-            history.push("/");
+            if (user.role === "admin") {
+                history.push("/admin/dashboard");
+            }
         }
         if (error) {
             alert.error(error);
             dispatch(clearErrors());
         }
-    }, [dispatch, alert, isAuthenticated, error, history]);
+
+    });
 
     const submitHandler = (e) => {
         e.preventDefault();
